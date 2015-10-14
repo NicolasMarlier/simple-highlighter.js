@@ -72,12 +72,19 @@ $.highlighter = function($elt, params) {
 	if(params.color)  obj.color = params.color;
 
 	$elt.mouseup(function(event) {
-		var wsel = window.getSelection();
+		/*var wsel = window.getSelection();
 		addHighlight({
 			startOffset: wsel.baseOffset,
 			endOffset: wsel.extentOffset
+		});*/
+		addHighlight({
+			startOffset: $elt[0].selectionStart,
+			endOffset: $elt[0].selectionEnd
 		});
-		window.getSelection().removeAllRanges()
+
+		window.getSelection().removeAllRanges();
+
+		console.log("ohhho");
 	});
 	
 
