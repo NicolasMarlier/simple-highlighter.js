@@ -9,6 +9,10 @@ $.highlighter = function($elt, params) {
 	$parent.append($container);
 	var text = $elt.text();
 
+	$("body").append($("<div>").text(text));
+	$elt.css({height: $elt.innerHeight()});
+	//console.log($elt.innerHeight());
+
 	var addHighlight = function(newHighlight) {
 		if(newHighlight.endOffset - newHighlight.startOffset > 0) {
 			if(obj.onBeforeHighlight(newHighlight)) {
@@ -39,17 +43,24 @@ $.highlighter = function($elt, params) {
 		}
 	};
 
+	var nl2br = function(str, is_xhtml) {   
+    	var breakTag = (is_xhtml || typeof is_xhtml === 'undefined') ? '<br />' : '<br>';    
+    	return (str + '').replace(/([^>\r\n]?)(\r\n|\n\r|\r|\n)/g, '$1'+ breakTag +'$2');
+	};
+
 	var redrawHighlights = function() {
 		$backgroundContainer.html("");
 		var currentIndex = 0;
 		_.each(obj.highlights, function(highlight) {
 			if(highlight.startOffset > currentIndex) {
-				$backgroundContainer.append($("<span>").html(text.substring(currentIndex, highlight.startOffset)));		
+				$backgroundContainer.append($("<span>").html(nl2br(text.substring(currentIndex, highlight.startOffset))));		
 			}
-			$backgroundContainer.append($("<span>").html(text.substring(highlight.startOffset, highlight.endOffset)).css({background: obj.color}));
+			$backgroundContainer.append($("<span>").html(nl2br(text.substring(highlight.startOffset, highlight.endOffset))).css({background: obj.color}));
 			currentIndex = highlight.endOffset;
 		});
 	};
+
+	
 
 
 	var obj = {
