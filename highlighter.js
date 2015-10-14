@@ -17,6 +17,17 @@ $.highlighter = function($elt, params) {
 		if(newHighlight.endOffset - newHighlight.startOffset > 0) {
 			if(obj.onBeforeHighlight(newHighlight)) {
 			
+				if(obj.onlyWords) {
+					while(newHighlight.startOffset > 0 && /\S/m.test(text[newHighlight.startOffset - 1])) {
+						newHighlight.startOffset -= 1;
+					}
+					while(newHighlight.endOffset < text.length && /\S/m.test(text[newHighlight.endOffset])) {
+						newHighlight.endOffset += 1;
+					}
+				}
+				if(obj.singleHighlight) {
+					obj.highlights = [];
+				}
 				obj.highlights.push(newHighlight);
 				obj.highlights = _.sortBy(obj.highlights, function(highlight) {
 					return highlight.startOffset;
@@ -33,12 +44,16 @@ $.highlighter = function($elt, params) {
 				obj.highlights = tmp;
 
 				redrawHighlights();
+
+				obj.onChange();
+				obj.onAfterHighlight(newHighlight);
 			}
 		}
 		else {
 			obj.highlights = _.filter(obj.highlights, function(highlight) {
 				return highlight.startOffset > newHighlight.startOffset || highlight.endOffset < newHighlight.startOffset;
 			});
+			obj.onChange();
 			redrawHighlights();
 		}
 	};
@@ -66,21 +81,46 @@ $.highlighter = function($elt, params) {
 	var obj = {
 		highlights: [],
 		$elt: $elt,
+		onWords: false,
+		singleHighlight: false,
 		onBeforeHighlight: function(range) {
 			return true;
+		},
+		onAfterHighlight: function(range) {
+			
+		},
+		onChange: function() {
+
 		},
 		getHighLights: function() {
 			return obj.highlights;
 		},
-		color: "red"
+		getData: function() {
+			return _.map(obj.highlights, function(highlight) {
+				return {
+					startOffset: highlight.startOffset,
+					endOffset: highlight.endOffset,
+					text: text.substring(highlight.startOffset, highlight.endOffset)
+				};
+			});
+		},
+		color: "red",
+		text: text
+
 	};
+	if(params.onlyWords)  obj.onlyWords = params.onlyWords;
+	if(params.singleHighlight)  obj.singleHighlight = params.singleHighlight;
+	if(params.onBeforeHighlight)  obj.onBeforeHighlight = params.onBeforeHighlight;
+	if(params.onAfterHighlight)  obj.onAfterHighlight = params.onAfterHighlight;
+	if(params.onChange)  obj.onChange = params.onChange;
+	if(params.color)  obj.color = params.color;
 	if(params.highlights) {
 		_.each(params.highlights, function(highlight) {
 			addHighlight(highlight);
 		});
+		obj.onChange();
 	}
-	if(params.onBeforeHighlight)  obj.onBeforeHighlight = params.onBeforeHighlight;
-	if(params.color)  obj.color = params.color;
+	
 
 	$elt.mouseup(function(event) {
 		/*var wsel = window.getSelection();
@@ -94,8 +134,6 @@ $.highlighter = function($elt, params) {
 		});
 
 		window.getSelection().removeAllRanges();
-
-		console.log("ohhho");
 	});
 	
 
